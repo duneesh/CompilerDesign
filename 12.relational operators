@@ -1,0 +1,13 @@
+%{
+%}
+%%
+[a-z]+ {printf("word: %s\n",yytext);}
+">"|"<"|"<="|">="|"=="|"!=" {printf("relational operator: %s\n",yytext);}
+%%
+int yywrap(){}
+int main()
+{
+printf("enter the combination of words and relops: ");
+yylex();
+printf("\n");
+}
