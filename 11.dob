@@ -1,0 +1,13 @@
+%{
+%}
+%%
+[0-9][0-9]\/[0-1][0-9]\/[1-2][0-9]{3} {printf("valid date of birt");}
+.+ {printf("invalid date of birt");}
+%%
+int yywrap(){}
+int main()
+{
+printf("enter the date of birth: ");
+yylex();
+printf("\n");
+}
