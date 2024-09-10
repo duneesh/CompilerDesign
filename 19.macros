@@ -1,0 +1,19 @@
+%{
+int nmacro = 0, nheader = 0;  // Initialize counters
+%}
+%%
+"#define"  { nmacro++; }     // Increment macro counter for "#define"
+"#include" { nheader++; }    // Increment header counter for "#include"
+.|\n { }                     // Ignore all other characters
+%%
+int yywrap() {
+    return 1;
+}
+int main() {
+    printf("Enter the string:\n");
+    yylex();  // Start lexical analysi
+    // Corrected printf statement
+    printf("Number of macros defined = %d\n", nmacro);
+    printf("Number of header files included = %d\n", nheader);
+    return 0;
+}
