@@ -1,0 +1,17 @@
+%{
+#include <stdio.h>
+int i=0, l=0, c=0;
+%}
+%%
+\n { i++; }
+[a-zA-Z0-9]+ { l++; c += yyleng; }
+. { c++; }
+%%
+int yywrap() {}
+int main() {
+    printf("enter the string: ");
+    yylex();
+    printf("no of lines: %d\n", i);
+    printf("no of words: %d\n", l);
+    printf("no of characters: %d\n", c);
+}
