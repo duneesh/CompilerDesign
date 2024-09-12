@@ -12,32 +12,69 @@ typedef struct {
 
 typedef struct {
     char symbol;
+    int firstSet[MAX_SYMBOLS];
     int followSet[MAX_SYMBOLS];
-} FollowSet;
+    int isTerminal;
+} Symbol;
 
 int numRules;
 Rule rules[MAX_RULES];
 int numSymbols;
-FollowSet followSets[MAX_SYMBOLS];
+Symbol symbols[MAX_SYMBOLS];
 
 int isTerminal(char symbol) {
-    for (int i = 0; i < numRules; i++) {
-        if (rules[i].symbols[0] == symbol) {
-            return rules[i].isTerminal;
+    for (int i = 0; i < numSymbols; i++) {
+        if (symbols[i].symbol == symbol) {
+            return symbols[i].isTerminal;
         }
     }
     return 0; 
 }
 
-void computeFollowSet(char symbol) {
-    if (followSets[symbol].followSet[symbol] == 1) {
+void computeFirstSet(char symbol) {
+    if (symbols[symbol].firstSet[symbol] == 1) {
+        return; 
+    }
+
+    symbols[symbol].firstSet[symbol] = 1;
+
+    if (isTerminal(symbol)) {
+        symbols[symbol].firstSet[symbol] = 1;
         return;
     }
 
-    followSets[symbol].followSet[symbol] = 1;
+    for (int i = 0; i < numRules; i++) {
+        if (rules[i].symbols[0] == symbol) {
+            int j = 0;
+            while (j < strlen(rules[i].symbols) && !isTerminal(rules[i].symbols[j])) {
+                computeFirstSet(rules[i].symbols[j]);
+                for (int k = 0; k < MAX_SYMBOLS; k++) {
+                    if (symbols[rules[i].symbols[j]].firstSet[k] == 1) {
+                        symbols[symbol].firstSet[k] = 1;
+                    }
+                }
+                if (symbols[rules[i].symbols[j]].firstSet['e'] == 1) {
+                    j++;
+                } else {
+                    break;
+                }
+            }
+            if (j == strlen(rules[i].symbols)) {
+                symbols[symbol].firstSet['e'] = 1;
+            }
+        }
+    }
+}
+
+void computeFollowSet(char symbol) {
+    if (symbols[symbol].followSet[symbol] == 1) {
+        return;
+    }
+
+    symbols[symbol].followSet[symbol] = 1;
 
     if (symbol == rules[0].symbols[0]) {
-        followSets[symbol].followSet['$'] = 1;
+        symbols[symbol].followSet['$'] = 1;
     }
 
     for (int i = 0; i < numRules; i++) {
@@ -47,11 +84,11 @@ void computeFollowSet(char symbol) {
                 while (k < strlen(rules[i].symbols) && !isTerminal(rules[i].symbols[k])) {
                     computeFirstSet(rules[i].symbols[k]);
                     for (int l = 0; l < MAX_SYMBOLS; l++) {
-                        if (firstSets[rules[i].symbols[k]].firstSet[l] == 1 && l != 'ε') {
-                            followSets[symbol].followSet[l] = 1;
+                        if (symbols[rules[i].symbols[k]].firstSet[l] == 1 && l != 'e') {
+                            symbols[symbol].followSet[l] = 1;
                         }
                     }
-                    if (firstSets[rules[i].symbols[k]].firstSet['ε'] == 1) {
+                    if (symbols[rules[i].symbols[k]].firstSet['e'] == 1) {
                         k++;
                     } else {
                         break;
@@ -60,8 +97,8 @@ void computeFollowSet(char symbol) {
                 if (k == strlen(rules[i].symbols)) {
                     computeFollowSet(rules[i].symbols[0]);
                     for (int l = 0; l < MAX_SYMBOLS; l++) {
-                        if (followSets[rules[i].symbols[0]].followSet[l] == 1) {
-                            followSets[symbol].followSet[l] = 1;
+                        if (symbols[rules[i].symbols[0]].followSet[l] == 1) {
+                            symbols[symbol].followSet[l] = 1;
                         }
                     }
                 }
@@ -70,22 +107,21 @@ void computeFollowSet(char symbol) {
     }
 }
 
-
 int main() {
-  
+    
     for (int i = 0; i < numSymbols; i++) {
-        computeFirstSet(rules[i].symbols[0]);
+        computeFirstSet(symbols[i].symbol);
     }
 
     for (int i = 0; i < numSymbols; i++) {
-        computeFollowSet(rules[i].symbols[0]);
+        computeFollowSet(symbols[i].symbol);
     }
 
     for (int i = 0; i < numSymbols; i++) {
-        printf("FOLLOW(%c) = {", rules[i].symbols[0]);
+        printf("FOLLOW(%c) = {", symbols[i].symbol);
         int printed = 0;
         for (int j = 0; j < MAX_SYMBOLS; j++) {
-            if (followSets[rules[i].symbols[0]].followSet[j] == 1) {
+            if (symbols[i].followSet[j] == 1) {
                 if (printed) {
                     printf(", ");
                 }
