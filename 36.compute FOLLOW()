@@ -1,0 +1,100 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_RULES 100
+#define MAX_SYMBOLS 50
+
+typedef struct {
+    char symbols[MAX_SYMBOLS];
+    int isTerminal;
+} Rule;
+
+typedef struct {
+    char symbol;
+    int followSet[MAX_SYMBOLS];
+} FollowSet;
+
+int numRules;
+Rule rules[MAX_RULES];
+int numSymbols;
+FollowSet followSets[MAX_SYMBOLS];
+
+int isTerminal(char symbol) {
+    for (int i = 0; i < numRules; i++) {
+        if (rules[i].symbols[0] == symbol) {
+            return rules[i].isTerminal;
+        }
+    }
+    return 0; 
+}
+
+void computeFollowSet(char symbol) {
+    if (followSets[symbol].followSet[symbol] == 1) {
+        return;
+    }
+
+    followSets[symbol].followSet[symbol] = 1;
+
+    if (symbol == rules[0].symbols[0]) {
+        followSets[symbol].followSet['$'] = 1;
+    }
+
+    for (int i = 0; i < numRules; i++) {
+        for (int j = 0; j < strlen(rules[i].symbols); j++) {
+            if (rules[i].symbols[j] == symbol && j < strlen(rules[i].symbols) - 1) {
+                int k = j + 1;
+                while (k < strlen(rules[i].symbols) && !isTerminal(rules[i].symbols[k])) {
+                    computeFirstSet(rules[i].symbols[k]);
+                    for (int l = 0; l < MAX_SYMBOLS; l++) {
+                        if (firstSets[rules[i].symbols[k]].firstSet[l] == 1 && l != 'ε') {
+                            followSets[symbol].followSet[l] = 1;
+                        }
+                    }
+                    if (firstSets[rules[i].symbols[k]].firstSet['ε'] == 1) {
+                        k++;
+                    } else {
+                        break;
+                    }
+                }
+                if (k == strlen(rules[i].symbols)) {
+                    computeFollowSet(rules[i].symbols[0]);
+                    for (int l = 0; l < MAX_SYMBOLS; l++) {
+                        if (followSets[rules[i].symbols[0]].followSet[l] == 1) {
+                            followSets[symbol].followSet[l] = 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+int main() {
+  
+    for (int i = 0; i < numSymbols; i++) {
+        computeFirstSet(rules[i].symbols[0]);
+    }
+
+    for (int i = 0; i < numSymbols; i++) {
+        computeFollowSet(rules[i].symbols[0]);
+    }
+
+    for (int i = 0; i < numSymbols; i++) {
+        printf("FOLLOW(%c) = {", rules[i].symbols[0]);
+        int printed = 0;
+        for (int j = 0; j < MAX_SYMBOLS; j++) {
+            if (followSets[rules[i].symbols[0]].followSet[j] == 1) {
+                if (printed) {
+                    printf(", ");
+                }
+                printf("%c", j);
+                printed = 1;
+            }
+        }
+        printf("}\n");
+    }
+
+    return 0;
+}
